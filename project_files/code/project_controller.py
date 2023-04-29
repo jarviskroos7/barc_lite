@@ -1,7 +1,7 @@
 #!/usr/bin python3
 
 # Your import statements here
-
+import numpy as np
 from mpclab_common.pytypes import VehicleState, VehiclePrediction
 from mpclab_common.track import get_track
 from mpclab_controllers.abstract_controller import AbstractController
@@ -48,9 +48,25 @@ class ProjectController(AbstractController):
             _s, _ey, _, = self.track.global_to_local((_x, _y, 0))
             bound_out_sey.append([_s, _ey])
 
+    # Example for obtaining the x-y points of the track boundaries
+    track_xy = self.track.get_track_xy()
+    bound_in_xy = track_xy['bound_in']
+    bound_out_xy = track_xy['bound_out'] 
+
+    # Convert x-y points to frenet frame
+    bound_in_sey = []
+    for _x, _y in zip(bound_in_xy['x'], bound_in_xy['y']):
+        _s, _ey, _, = self.track.global_to_local((_x, _y, 0))
+        bound_in_sey.append([_s, _ey])
+
+    bound_out_sey = []
+    for _x, _y in zip(bound_out_xy['x'], bound_out_xy['y']):
+        _s, _ey, _, = self.track.global_to_local((_x, _y, 0))
+        bound_out_sey.append([_s, _ey])
+
     # This method will be called upon starting the control loop
     def initialize(self, vehicle_state: VehicleState):
-        pass
+        self.t0 = vehicle_state.t
 
     # This method will be called once every time step, make sure to modify the vehicle_state
     # object in place with your computed control actions for acceleration (m/s^2) and steering (rad)
