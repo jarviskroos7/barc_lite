@@ -2,6 +2,8 @@
 
 # Your import statements here
 import numpy as np
+import os
+from scipy import interpolate
 from mpclab_common.pytypes import VehicleState, VehiclePrediction
 from mpclab_common.track import get_track
 from mpclab_controllers.abstract_controller import AbstractController
@@ -48,21 +50,14 @@ class ProjectController(AbstractController):
             _s, _ey, _, = self.track.global_to_local((_x, _y, 0))
             bound_out_sey.append([_s, _ey])
 
-    # Example for obtaining the x-y points of the track boundaries
-    track_xy = self.track.get_track_xy()
-    bound_in_xy = track_xy['bound_in']
-    bound_out_xy = track_xy['bound_out'] 
-
-    # Convert x-y points to frenet frame
-    bound_in_sey = []
-    for _x, _y in zip(bound_in_xy['x'], bound_in_xy['y']):
-        _s, _ey, _, = self.track.global_to_local((_x, _y, 0))
-        bound_in_sey.append([_s, _ey])
-
-    bound_out_sey = []
-    for _x, _y in zip(bound_out_xy['x'], bound_out_xy['y']):
-        _s, _ey, _, = self.track.global_to_local((_x, _y, 0))
-        bound_out_sey.append([_s, _ey])
+        # Loading raceline
+        print(os.getcwd())
+        self.raceline = np.load('project_code/raceline_0428.npz', allow_pickle=True)
+        self.s_ref = self.raceline['s']
+        self.e_y_ref = self.raceline['e_y']
+        self.e_psi_ref = self.raceline['e_psi']
+        self.func_e_y = interpolate.interp1d(self.s_ref, self.e_y_ref)
+        self.func_e_psi = interpolate.interp1d(self.s_ref, self.e_psi_ref)
 
     # This method will be called upon starting the control loop
     def initialize(self, vehicle_state: VehicleState):
@@ -72,15 +67,27 @@ class ProjectController(AbstractController):
     # object in place with your computed control actions for acceleration (m/s^2) and steering (rad)
     def step(self, vehicle_state: VehicleState):
         
+        # Example transformation from global to Frenet frame coordinates
+        s, e_y, e_psi = self.track.global_to_local((vehicle_state.x.x, vehicle_state.x.y, vehicle_state.e.psi))
+
+        # interploate by s to get the corresponding ey and epsi values on the track
+        interp_e_y = self.func_e_y(s)
+        interp_e_psi = self.func_e_psi(s)
+
+        t = vehicle_state.t - self.t0
+
         # Modify the vehicle state object in place to pass control inputs to the ROS node
-        accel = 0.1
-        steer = 0.0
+        
+        # simple P controller
+        # definition of vehicle_state
+        # https://github.com/MPC-Berkeley/barc_lite/blob/8260d93c1922d0b01537ada339514e1fee795b6d/workspace/src/mpclab_common/mpclab_common/lib/mpclab_common/pytypes.py#L300
+
+        accel = -1 * (vehicle_state.v.v_long - 1)
+        steer = -1 * ((e_y - interp_e_y) + (e_psi - interp_e_psi))
+
         vehicle_state.u.u_a = accel
         vehicle_state.u.u_steer = steer
 
-        # Example transformation from global to Frenet frame coordinates
-        s, e_y, e_psi = self.track.global_to_local((vehicle_state.x.x, vehicle_state.x.y, vehicle_state.e.psi))
-        
         # Example of printing
         self.print_method(f's: {s} | e_y: {e_y} | e_psi: {e_psi}')
         self.print_method(f'Accel: {accel} | Steering: {steer}')

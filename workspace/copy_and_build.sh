@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Change this to where you mounted the directory containing your code
-export MOUNT_DIRECTORY="/project_code" 
+export MOUNT_DIRECTORY="/project_code"
+# export MOUNT_DIRECTORY="/Users/jarvis/Library/Mobile Documents/com~apple~CloudDocs/Desktop/Spring 2023/ME236C/barc_lite/project_files/code"
 
 # Copy contents of mounted directory to 
 # /barc_lite/workspace/src/mpclab_controllers/mpclab_controlers/lib/mpclab_controllers

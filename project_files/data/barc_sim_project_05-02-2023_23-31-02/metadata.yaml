@@ -1,0 +1,43 @@
+rosbag2_bagfile_information:
+  version: 4
+  storage_identifier: sqlite3
+  relative_file_paths:
+    - barc_sim_project_05-02-2023_23-31-02_0.db3
+  duration:
+    nanoseconds: 201700139353
+  starting_time:
+    nanoseconds_since_epoch: 1683070264082641136
+  message_count: 12562
+  topics_with_message_count:
+    - topic_metadata:
+        name: /experiment/barc_1/state_input_log
+        type: mpclab_common/msg/VehicleStateMsg
+        serialization_format: cdr
+        offered_qos_profiles: "- history: 3\n  depth: 0\n  reliability: 2\n  durability: 2\n  deadline:\n    sec: 2147483647\n    nsec: 4294967295\n  lifespan:\n    sec: 2147483647\n    nsec: 4294967295\n  liveliness: 1\n  liveliness_lease_duration:\n    sec: 2147483647\n    nsec: 4294967295\n  avoid_ros_namespace_conventions: false"
+      message_count: 832
+    - topic_metadata:
+        name: /experiment/barc_1/ref
+        type: mpclab_common/msg/PredictionMsg
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 0
+    - topic_metadata:
+        name: /experiment/barc_1/pred
+        type: mpclab_common/msg/PredictionMsg
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 832
+    - topic_metadata:
+        name: /experiment/barc_1/est_state
+        type: mpclab_common/msg/VehicleStateMsg
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 10029
+    - topic_metadata:
+        name: /experiment/barc_1/ecu
+        type: mpclab_common/msg/VehicleActuationMsg
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 869
+  compression_format: ""
+  compression_mode: ""
