@@ -59,6 +59,9 @@ class ProjectController(AbstractController):
         self.func_e_y = interpolate.interp1d(self.s_ref, self.e_y_ref)
         self.func_e_psi = interpolate.interp1d(self.s_ref, self.e_psi_ref)
 
+        self.v_long_ref = self.raceline['v_long']
+        self.func_v_long = interpolate.interp1d(self.s_ref, self.v_long_ref)
+
     # This method will be called upon starting the control loop
     def initialize(self, vehicle_state: VehicleState):
         self.t0 = vehicle_state.t
@@ -70,9 +73,10 @@ class ProjectController(AbstractController):
         # Example transformation from global to Frenet frame coordinates
         s, e_y, e_psi = self.track.global_to_local((vehicle_state.x.x, vehicle_state.x.y, vehicle_state.e.psi))
 
-        # interploate by s to get the corresponding ey and epsi values on the track
+        # interpolate by s to get the corresponding ey and epsi values on the track
         interp_e_y = self.func_e_y(s)
         interp_e_psi = self.func_e_psi(s)
+        interp_v_long = self.func_v_long(s)
 
         t = vehicle_state.t - self.t0
 
@@ -83,7 +87,8 @@ class ProjectController(AbstractController):
         # https://github.com/MPC-Berkeley/barc_lite/blob/8260d93c1922d0b01537ada339514e1fee795b6d/workspace/src/mpclab_common/mpclab_common/lib/mpclab_common/pytypes.py#L300
 
         # accel = -0.1 * (vehicle_state.v.v_long - 4)
-        accel = -1 * (vehicle_state.v.v_long - 3)
+        # accel = -1 * (vehicle_state.v.v_long - 3)
+        accel = -1 * (vehicle_state.v.v_long - 0.9 * interp_v_long)
         steer = -1 * ((e_y - interp_e_y) + (e_psi - interp_e_psi))
 
         vehicle_state.u.u_a = accel
