@@ -82,7 +82,8 @@ class ProjectController(AbstractController):
         # definition of vehicle_state
         # https://github.com/MPC-Berkeley/barc_lite/blob/8260d93c1922d0b01537ada339514e1fee795b6d/workspace/src/mpclab_common/mpclab_common/lib/mpclab_common/pytypes.py#L300
 
-        accel = -1 * (vehicle_state.v.v_long - 1)
+        # accel = -0.1 * (vehicle_state.v.v_long - 4)
+        accel = -1 * (vehicle_state.v.v_long - 3)
         steer = -1 * ((e_y - interp_e_y) + (e_psi - interp_e_psi))
 
         vehicle_state.u.u_a = accel
