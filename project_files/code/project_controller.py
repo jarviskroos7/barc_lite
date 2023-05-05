@@ -8,6 +8,24 @@ from mpclab_common.pytypes import VehicleState, VehiclePrediction
 from mpclab_common.track import get_track
 from mpclab_controllers.abstract_controller import AbstractController
 
+class PIController:
+    
+    # Simple PI controller
+
+    def __init__(self, kp, ki, dt):
+        self.kp = kp
+        self.ki = ki
+        self.integral = 0.0
+        self.error_prev = 0.0
+        self.dt = dt # 10hz
+        
+    def update(self, error):
+        self.integral += error * self.dt
+        derivative = (error - self.error_prev) / self.dt # for PID
+        output = self.kp * error + self.ki * self.integral
+        self.error_prev = error
+        return output
+
 # The ProjectController class will be instantiated when creating the ROS node.
 class ProjectController(AbstractController):
     def __init__(self, dt: float, print_method=print):
@@ -51,8 +69,7 @@ class ProjectController(AbstractController):
             bound_out_sey.append([_s, _ey])
 
         # Loading raceline
-        print(os.getcwd())
-        self.raceline = np.load('project_code/raceline_0428.npz', allow_pickle=True)
+        self.raceline = np.load('project_code/raceline_tt=0.1.npz', allow_pickle=True)
         self.s_ref = self.raceline['s']
         self.e_y_ref = self.raceline['e_y']
         self.e_psi_ref = self.raceline['e_psi']
@@ -61,6 +78,10 @@ class ProjectController(AbstractController):
 
         self.v_long_ref = self.raceline['v_long']
         self.func_v_long = interpolate.interp1d(self.s_ref, self.v_long_ref)
+
+        # Initialize controller
+        self.accel_controller = PIController(kp=1, ki=0.01, dt=self.dt)
+        self.steer_controller = PIController(kp=0.8, ki=0.05, dt=self.dt)
 
     # This method will be called upon starting the control loop
     def initialize(self, vehicle_state: VehicleState):
@@ -88,15 +109,22 @@ class ProjectController(AbstractController):
 
         # accel = -0.1 * (vehicle_state.v.v_long - 4)
         # accel = -1 * (vehicle_state.v.v_long - 3)
-        accel = -1 * (vehicle_state.v.v_long - 0.9 * interp_v_long)
-        steer = -1 * ((e_y - interp_e_y) + (e_psi - interp_e_psi))
+        # accel = -1 * (vehicle_state.v.v_long - 0.9 * interp_v_long)
+        # steer = -1 * ((e_y - interp_e_y) + (e_psi - interp_e_psi))
+
+        accel = self.accel_controller.update(0.9 * interp_v_long - vehicle_state.v.v_long)
+        steer = self.steer_controller.update((interp_e_y - e_y) + 1.1 * (interp_e_psi - e_psi))
+
+        # acceleration and steering angle bound
+        accel = max(min(accel, 1), -1)
+        steer = max(min(steer, 0.43), -0.43)
 
         vehicle_state.u.u_a = accel
         vehicle_state.u.u_steer = steer
 
         # Example of printing
-        self.print_method(f's: {s} | e_y: {e_y} | e_psi: {e_psi}')
-        self.print_method(f'Accel: {accel} | Steering: {steer}')
+        self.print_method(f's: {round(s, 3)} | e_y: {round(e_y, 3)} | e_psi: {round(e_psi, 3)}')
+        self.print_method(f'Accel: {round(accel, 3)} | Steering: {round(steer, 3)}')
 
         return
 
