@@ -69,7 +69,7 @@ class ProjectController(AbstractController):
             bound_out_sey.append([_s, _ey])
 
         # Loading raceline
-        self.raceline = np.load('project_code/raceline_tt=0.3.npz', allow_pickle=True)
+        self.raceline = np.load('project_code/raceline_tt=0.1.npz', allow_pickle=True)
         self.s_ref = self.raceline['s']
         self.e_y_ref = self.raceline['e_y']
         self.e_psi_ref = self.raceline['e_psi']
@@ -80,8 +80,8 @@ class ProjectController(AbstractController):
         self.func_v_long = interpolate.interp1d(self.s_ref, self.v_long_ref)
 
         # Initialize controller
-        self.accel_controller = PIController(kp=1, ki=0.01, dt=self.dt)
-        self.steer_controller = PIController(kp=0.8, ki=0.02, dt=self.dt)
+        self.accel_controller = PIController(kp=1, ki=0.02, dt=self.dt)
+        self.steer_controller = PIController(kp=0.8, ki=0.05, dt=self.dt)
 
     # This method will be called upon starting the control loop
     def initialize(self, vehicle_state: VehicleState):
